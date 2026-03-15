@@ -1,1 +1,268 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Psycholog Sądowy — Gra RPG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0c0e14;--panel:#11141c;--panel2:#161a24;--border:#ffffff0d;--border2:#ffffff18;
+    --text:#e8e4d8;--muted:#6b7280;--accent:#c8a96e;--accent2:#7c6df0;
+    --danger:#d95f5f;--success:#5fb87a;--warning:#d4914a;
+    --red-dim:#3a1a1a;--purple-dim:#1e1a38;--green-dim:#1a2e1f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;font-family:'Crimson Pro',Georgia,serif;background:var(--bg);color:var(--text);overflow:hidden}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 80%,#7c6df012 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 80% 20%,#c8a96e0a 0%,transparent 60%);pointer-events:none;z-index:0}
 
+  /* INTRO */
+  #intro{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);padding:40px 24px;text-align:center}
+  #intro .eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:28px;animation:fadeUp .6s .2s ease both}
+  #intro h1{font-size:clamp(32px,6vw,56px);font-weight:300;line-height:1.15;margin-bottom:16px;animation:fadeUp .6s .4s ease both}
+  #intro h1 em{font-style:italic;color:var(--accent)}
+  #intro .desc{font-size:18px;color:var(--muted);line-height:1.7;max-width:560px;margin-bottom:40px;font-weight:300;animation:fadeUp .6s .6s ease both}
+  #intro .cases-preview{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:40px;animation:fadeUp .6s .8s ease both}
+  #intro .case-pill{padding:7px 16px;border-radius:999px;font-family:'DM Mono',monospace;font-size:12px;border:1px solid;letter-spacing:1px}
+  #intro .start-btn{padding:16px 48px;background:var(--accent);border:none;border-radius:4px;color:#0c0e14;font-size:18px;font-family:'Crimson Pro',serif;font-weight:600;cursor:pointer;letter-spacing:1px;animation:fadeUp .6s 1s ease both;transition:all .2s}
+  #intro .start-btn:hover{background:#d4b878;transform:translateY(-1px)}
+  #intro .warning-note{margin-top:24px;font-size:13px;color:var(--muted);max-width:480px;line-height:1.6;font-style:italic;animation:fadeUp .6s 1.2s ease both}
+
+  /* SELECT */
+  #select-screen{position:fixed;inset:0;z-index:90;display:none;background:var(--bg);padding:40px 24px;overflow-y:auto}
+  #select-screen h2{font-size:28px;font-weight:300;text-align:center;margin-bottom:8px}
+  #select-screen .select-sub{text-align:center;color:var(--muted);font-size:16px;margin-bottom:36px}
+  .cases-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:960px;margin:0 auto}
+  .case-card-select{background:var(--panel);border:1px solid var(--border2);border-radius:8px;padding:24px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+  .case-card-select::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--card-color,var(--accent))}
+  .case-card-select:hover{transform:translateY(-2px);background:var(--panel2)}
+  .case-card-select .case-id{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase}
+  .case-card-select h3{font-size:20px;font-weight:400;margin-bottom:8px}
+  .case-card-select .case-desc{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+  .case-card-select .case-tags{display:flex;gap:6px;flex-wrap:wrap}
+  .case-tag{padding:3px 10px;border-radius:999px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid}
+  .difficulty{font-family:'DM Mono',monospace;font-size:11px;position:absolute;top:20px;right:20px}
+
+  /* GAME */
+  #game{position:fixed;inset:0;z-index:80;display:none;flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;z-index:5}
+  .topbar .case-info{display:flex;align-items:center;gap:12px}
+  .topbar .case-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--accent);border:1px solid var(--accent)44;padding:4px 10px;border-radius:999px}
+  .topbar .case-name{font-size:16px}
+  .topbar .right-tools{display:flex;gap:8px;align-items:center}
+  .tool-btn{padding:6px 14px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);letter-spacing:1px;transition:all .15s}
+  .tool-btn:hover{border-color:var(--accent)66;color:var(--accent)}
+  .game-layout{display:grid;grid-template-columns:1fr 320px;flex:1;overflow:hidden}
+  @media(max-width:700px){.game-layout{grid-template-columns:1fr}.sidebar{display:none}}
+  .chat-area{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+  .messages{flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+  .messages::-webkit-scrollbar{width:4px}
+  .messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
+  .msg{display:flex;gap:12px;animation:msgIn .3s ease}
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .msg.user{flex-direction:row-reverse}
+  .msg-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;flex-shrink:0;margin-top:2px}
+  .msg.patient .msg-avatar{background:var(--panel2);border:1px solid var(--border2);color:var(--muted)}
+  .msg.user .msg-avatar{background:var(--accent)22;border:1px solid var(--accent)44;color:var(--accent)}
+  .msg.system .msg-avatar{background:var(--purple-dim);border:1px solid var(--accent2)44;color:var(--accent2)}
+  .msg-body{max-width:75%}
+  .msg-name{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:5px;letter-spacing:1px}
+  .msg.user .msg-name{text-align:right}
+  .msg-bubble{padding:12px 16px;border-radius:8px;font-size:16px;line-height:1.65}
+  .msg.patient .msg-bubble{background:var(--panel2);border:1px solid var(--border);color:var(--text)}
+  .msg.user .msg-bubble{background:var(--accent)18;border:1px solid var(--accent)33;color:var(--text)}
+  .msg.system .msg-bubble{background:var(--purple-dim);border:1px solid var(--accent2)33;color:var(--text);font-style:italic;font-size:14px}
+  .msg.narrator .msg-bubble{background:transparent;border:none;color:var(--muted);font-style:italic;font-size:15px;padding:4px 0}
+  .msg.narrator .msg-avatar{display:none}
+  .msg.narrator .msg-body{max-width:100%}
+  .typing-bubble{display:flex;gap:4px;align-items:center;padding:12px 16px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;width:fit-content}
+  .typing-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:typingPulse 1.2s ease infinite}
+  .typing-dot:nth-child(2){animation-delay:.2s}
+  .typing-dot:nth-child(3){animation-delay:.4s}
+  @keyframes typingPulse{0%,60%,100%{opacity:.3;transform:scale(.8)}30%{opacity:1;transform:scale(1)}}
+  .input-area{padding:16px 20px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0}
+  .input-row{display:flex;gap:10px;align-items:flex-end}
+  .chat-input{flex:1;background:var(--panel);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'Crimson Pro',serif;font-size:16px;resize:none;min-height:48px;max-height:120px;line-height:1.5;transition:border-color .2s;outline:none}
+  .chat-input:focus{border-color:var(--accent)55}
+  .chat-input::placeholder{color:var(--muted)}
+  .send-btn{width:48px;height:48px;border-radius:8px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+  .send-btn:hover{background:#d4b878;transform:scale(1.05)}
+  .send-btn svg{width:20px;height:20px;fill:#0c0e14}
+  .send-btn:disabled{background:var(--border2);cursor:not-allowed;transform:none}
+  .input-hint{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic}
+  .quick-qs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .quick-q{padding:5px 12px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:13px;font-family:'Crimson Pro',serif;cursor:pointer;transition:all .15s}
+  .quick-q:hover{border-color:var(--accent)55;color:var(--accent)}
+  .sidebar{overflow-y:auto;padding:20px 16px;background:var(--bg);display:flex;flex-direction:column;gap:16px}
+  .sidebar::-webkit-scrollbar{width:3px}
+  .sidebar::-webkit-scrollbar-thumb{background:var(--border)}
+  .sidebar-section{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:16px}
+  .sidebar-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+  .patient-info-row{display:flex;justify-content:space-between;margin-bottom:8px}
+  .patient-info-label{font-size:13px;color:var(--muted)}
+  .patient-info-value{font-size:13px;color:var(--text);font-weight:600}
+  .clue-item{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);animation:fadeUp .3s ease}
+  .clue-item:last-child{border-bottom:none}
+  .clue-empty{font-size:13px;color:var(--muted);font-style:italic}
+  .diag-btn{width:100%;padding:10px 14px;margin-bottom:6px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:14px;font-family:'Crimson Pro',serif;cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:8px}
+  .diag-btn:hover{border-color:var(--accent)55;color:var(--text);background:var(--panel2)}
+  .diag-btn.selected{border-color:var(--accent);color:var(--accent);background:var(--accent)11}
+  .diag-btn .diag-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0}
+  .diag-btn.selected .diag-dot{background:var(--accent)}
+  .submit-diag{width:100%;padding:12px;background:var(--accent);border:none;border-radius:6px;color:#0c0e14;font-size:16px;font-family:'Crimson Pro',serif;font-weight:600;cursor:pointer;margin-top:8px;transition:all .2s}
+  .submit-diag:hover{background:#d4b878}
+  .submit-diag:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed}
+  .score-row{display:flex;justify-content:space-between;align-items:center}
+  .score-num{font-size:24px;font-weight:300;color:var(--accent);font-family:'DM Mono',monospace}
+  .score-lbl{font-size:12px;color:var(--muted)}
+  .turn-counter{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+  .turns-bar{height:3px;background:var(--border);border-radius:999px;margin-top:8px;overflow:hidden}
+  .turns-fill{height:100%;background:var(--accent);border-radius:999px;transition:width .5s}
+  .modal-overlay{position:fixed;inset:0;background:#0c0e14ee;z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s}
+  .modal-overlay.show{opacity:1;pointer-events:all}
+  .modal{background:var(--panel);border:1px solid var(--border2);border-radius:12px;padding:36px;max-width:560px;width:100%;transform:translateY(20px);transition:transform .3s}
+  .modal-overlay.show .modal{transform:translateY(0)}
+  .modal h2{font-size:28px;font-weight:300;margin-bottom:8px}
+  .verdict-badge{display:inline-block;padding:6px 16px;border-radius:999px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1px;margin-bottom:20px}
+  .correct-badge{background:var(--green-dim);border:1px solid var(--success)55;color:var(--success)}
+  .wrong-badge{background:var(--red-dim);border:1px solid var(--danger)55;color:var(--danger)}
+  .explanation{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:24px}
+  .clues-found-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:10px}
+  .clue-found-item{display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:6px}
+  .modal-btns{display:flex;gap:10px;flex-wrap:wrap}
+  .modal-btn{padding:12px 24px;border-radius:6px;font-size:16px;font-family:'Crimson Pro',serif;cursor:pointer;transition:all .2s}
+  .modal-btn.primary{background:var(--accent);border:none;color:#0c0e14;font-weight:600}
+  .modal-btn.primary:hover{background:#d4b878}
+  .modal-btn.secondary{background:transparent;border:1px solid var(--border2);color:var(--muted)}
+  .modal-btn.secondary:hover{border-color:var(--accent)55;color:var(--accent)}
+  .status-bar{padding:6px 20px;background:var(--bg);border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);display:flex;gap:20px;flex-shrink:0}
+  .status-item{display:flex;gap:6px;align-items:center}
+  .status-dot{width:6px;height:6px;border-radius:50%}
+  .status-dot.green{background:var(--success);box-shadow:0 0 6px var(--success)88}
+  .status-dot.yellow{background:var(--warning)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="eyebrow">Gra Edukacyjna · Psychologia Kliniczna</div>
+  <h1>Psycholog <em>Sądowy</em></h1>
+  <p class="desc">Wciel się w doświadczonego psychologa sądowego. Rozmawiaj z pacjentami, zbieraj wskazówki diagnostyczne i postaw właściwą diagnozę zaburzenia osobowości.</p>
+  <div class="cases-preview">
+    <span class="case-pill" style="border-color:#C0392B55;color:#C0392B">Przypadek ASPD</span>
+    <span class="case-pill" style="border-color:#8E44AD55;color:#8E44AD">Przypadek BPD</span>
+    <span class="case-pill" style="border-color:#3498DB55;color:#3498DB">Przypadek Paranoidalne</span>
+    <span class="case-pill" style="border-color:#E67E22;color:#E67E22">Przypadek NPD</span>
+    <span class="case-pill" style="border-color:#2ECC71;color:#2ECC71">Przypadek Zależne</span>
+  </div>
+  <button class="start-btn" onclick="showSelectScreen()">Wybierz przypadek →</button>
+  <p class="warning-note">Gra zawiera fikcyjne przypadki kliniczne stworzone na potrzeby edukacji psychologicznej. Wszystkie postaci są fikcyjne.</p>
+</div>
+
+<!-- SELECT -->
+<div id="select-screen">
+  <h2>Wybierz przypadek</h2>
+  <p class="select-sub">Każdy przypadek to inny pacjent z innym zaburzeniem osobowości</p>
+  <div class="cases-grid" id="cases-grid"></div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div class="topbar">
+    <div class="case-info">
+      <span class="case-badge" id="top-case-badge">PRZYPADEK</span>
+      <span class="case-name" id="top-case-name">—</span>
+    </div>
+    <div class="right-tools">
+      <button class="tool-btn" onclick="showSelectScreen()">← Zmień przypadek</button>
+      <button class="tool-btn" onclick="submitDiagnosis()">Postaw diagnozę</button>
+    </div>
+  </div>
+  <div class="game-layout">
+    <div class="chat-area">
+      <div class="messages" id="messages"></div>
+      <div class="input-area">
+        <div class="quick-qs" id="quick-qs"></div>
+        <div class="input-row">
+          <textarea class="chat-input" id="chat-input" placeholder="Zadaj pytanie pacjentowi..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+            oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+        </div>
+        <div class="input-hint">Enter = wyślij · Shift+Enter = nowa linia</div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Dane pacjenta</div>
+        <div id="patient-info-rows"></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Zebrane wskazówki</div>
+        <div id="clues-list"><p class="clue-empty">Zadaj pytania, aby zebrać wskazówki...</p></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Postęp sesji</div>
+        <div class="score-row">
+          <div><div class="score-num" id="score-display">0</div><div class="score-lbl">punktów</div></div>
+          <div class="turn-counter"><span id="turns-used">0</span> / <span id="turns-max">10</span> pytań</div>
+        </div>
+        <div class="turns-bar"><div class="turns-fill" id="turns-fill" style="width:0%"></div></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Diagnoza</div>
+        <div id="diag-options"></div>
+        <button class="submit-diag" id="submit-diag-btn" onclick="submitDiagnosis()" disabled>Zatwierdź diagnozę</button>
+      </div>
+    </div>
+  </div>
+  <div class="status-bar">
+    <div class="status-item"><div class="status-dot green"></div><span>Sesja aktywna</span></div>
+    <div class="status-item"><div class="status-dot yellow"></div><span id="status-text">Zbierz co najmniej 3 wskazówki przed diagnozą</span></div>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Wynik diagnozy</h2>
+    <div id="modal-badge"></div>
+    <div class="explanation" id="modal-explanation"></div>
+    <div id="modal-clues"></div>
+    <div class="modal-btns">
+      <button class="modal-btn primary" onclick="nextCase()">Następny przypadek →</button>
+      <button class="modal-btn secondary" onclick="replayCase()">Spróbuj ponownie</button>
+      <button class="modal-btn secondary" onclick="showSelectScreen()">Wybierz inny</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CASES ────────────────────────────────────────────────────────
+const CASES_DATA = [
+  {
+    id:"ASPD-01",name:"Marek K., 34 lata",color:"#C0392B",difficulty:"ŚREDNI",diffColor:"#E67E22",
+    shortDesc:"Wielokrotnie karany, brak wyrzutów sumienia, manipulacyjny.",
+    tags:["Klaster B","Przemoc","Recydywa"],diagnosis:"ASPD",
+    patientInfo:{"Imię i wiek":"Marek K., 34 lata","Skierowanie":"Areszt śledczy","Zarzuty":"Rozbój, pobicie","Poprzednie wyroki":"3 wyroki"},
+    systemPrompt:`Jesteś Markiem K., 34-letnim mężczyzną z osobowością antyspołeczną (ASPD). Przebywasz w areszcie pod zarzutem rozboju. Rozmawiasz z psychologiem sądowym.
+
+Twój charakter:
+- Odpowiadasz chłodno, kalkulujesz co mówisz, nigdy nie pokazujesz słabości
+- Masz brak wyrzutów sumienia — ofiary to "głupcy" którzy dali się złapać
+- Manipulujesz rozmówcą, często kłamiesz lub podajesz informacje które Ci pomagają
+- Uważasz zasady za ograniczenia dla "naiwnych"
+- Mówisz o przeszłości w sposób pozbawiony emocji
+- Jeśli pytają o empatię — reagujesz z lekkim rozbawieniem lub dezorientacją
+- Miałeś zaburzenia zachowania już w szkole — bójki, kłamstwa, kradzieże
+- Nie wierzysz w terapię — "to dla słabeuszy"
+- Przemoc traktujesz instrumentalnie — narzędzie, nie emocja
+Nigdy nie przyznawaj otwarcie do zaburzenia. Odpowiadaj po polsku, 2-4 zdania.`,
+    clueKeywords:{"wyrzutów sumienia":{icon:"🔴",label:"Brak wyrzutów sumienia"},"głupcy":{icon:"🔴",label:"Dehumanizacja ofiar"},"słabość":{icon:"🔴",label:"Brak empatii"},"zasady":{icon:"🟡",label:"Odrzucenie norm społecznych"},"szkoł":{icon:"🟠",label:"Wczesny początek problemów"},"bójki":{icon:"🟠",label:"Historia agresji"},"narzędzie":{icon:"🔴",label:"Przemoc instrumentalna"},"słabeuszy":{icon:"🔴",label:"Pogarda dla terapii"},"terapia":{icon:"🟡",label:"Odrzucenie terapii"}},
+    maxTurns:10,
+    quickQuestions:["Jak się Pan czuje w areszcie?","Czy żałuje Pan tego co zrobił?","Jak wyglądało Pana 
